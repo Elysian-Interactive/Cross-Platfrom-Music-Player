@@ -79,9 +79,15 @@ class Extractor:
         # Retrieving the data from the song file
         if self.song.getFormat() == "mp3":
             audio = MP3(self.song.getFile(),ID3 = EasyID3)
-            self.metadata['title'] = audio.get('title')[0]
-            self.metadata['artist'] = audio.get('artist')[0]
-            self.metadata['album'] = audio.get('album')[0]
+            try:
+                self.metadata['title'] = audio.get('title')[0]
+                self.metadata['artist'] = audio.get('artist')[0]
+                self.metadata['album'] = audio.get('album')[0]
+            except TypeError: # Using this to catch None Type Error
+                self.metadata['title'] = audio.get('title')
+                self.metadata['artist'] = audio.get('artist')
+                self.metadata['album'] = audio.get('album')
+                
             self.metadata['duration'] = audio.info.length
             
             
@@ -91,16 +97,28 @@ class Extractor:
             
         elif self.song.getFormat() == "ogg":
             audio = OggVorbis(self.song.getFile())
-            self.metadata['title'] = audio.get('title')[0]
-            self.metadata['artist'] = audio.get('artist')[0]
-            self.metadata['album'] = audio.get('album')
+            try:
+                self.metadata['title'] = audio.get('title')[0]
+                self.metadata['artist'] = audio.get('artist')[0]
+                self.metadata['album'] = audio.get('album')
+            except TypeError:
+                self.metadata['title'] = audio.get('title')
+                self.metadata['artist'] = audio.get('artist')
+                self.metadata['album'] = audio.get('album')
+                
             self.metadata['duration'] = audio.info.length
             
         elif self.song.getFormat() == "flac":
             audio = FLAC(self.song.getFile())
-            self.metadata['title'] = audio.get('title')[0]
-            self.metadata['artist'] = audio.get('artist')[0]
-            self.metadata['album'] = audio.get('album')
+            try:
+                self.metadata['title'] = audio.get('title')[0]
+                self.metadata['artist'] = audio.get('artist')[0]
+                self.metadata['album'] = audio.get('album')[0]
+            except TypeError:
+                self.metadata['title'] = audio.get('title')
+                self.metadata['artist'] = audio.get('artist')
+                self.metadata['album'] = audio.get('album')
+                
             self.metadata['duration'] = audio.info.length
 
         
@@ -108,7 +126,7 @@ class Extractor:
     def setData(self):
         # Checking if the title of the song is None
         # If so then we can simply put it as the name of the file
-        if self.metadata['title'] == None:
+        if self.metadata['title'] == None or self.metadata['title'] == "":
             self.metadata['title'] = Path(self.song.getFile()).stem + "." + self.song.getFormat()
         
         # Now checking if the image file exists

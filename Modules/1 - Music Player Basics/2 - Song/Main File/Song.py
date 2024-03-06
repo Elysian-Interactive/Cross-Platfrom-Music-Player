@@ -15,6 +15,10 @@ class Song:
                             # playing or not
         self.format = None # Defines the format of the song
     
+    # String Equivalent of the function
+    def __str__(self):
+        return f'Title : {self.title}\nArtist : {self.artist}\nAlbum : {self.album}\nCover : {self.cover}\n\Duration : {self.duration}\nFormat : {self.format}\n'
+    
     # Utility functions
     
     # SETTER FUNCTIONS
@@ -36,6 +40,9 @@ class Song:
     def setFormat(self,format):
         self.format = format
     
+    def setCover(self,cover):
+        self.cover = cover
+    
     # Function to load the song location
     def setFile(self,filename):
         # Setting the file location
@@ -50,6 +57,8 @@ class Song:
             self.setFormat("ogg")
         elif filename.endswith(".flac"):
             self.setFormat("flac")
+        else:
+            self.setFormat("other")
     
     # GETTER FUNCTIONS
     def getTitle(self):
@@ -72,6 +81,9 @@ class Song:
     
     def getFile(self):
         return self.location
+    
+    def getCover(self):
+        return self.cover
     
     
         

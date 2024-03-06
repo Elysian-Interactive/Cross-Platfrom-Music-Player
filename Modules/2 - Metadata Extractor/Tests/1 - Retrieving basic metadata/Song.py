@@ -15,6 +15,11 @@ class Song:
                             # playing or not
         self.format = None # Defines the format of the song
     
+    # String Equivalent of the function
+    def __str__(self):
+        return f'Title : {self.title}\nArtist : {self.artist}\nAlbum : {self.album}\nCover : {self.cover}\n\
+        Duration : {self.duration}\nFormat : {self.format}'
+    
     # Utility functions
     
     # SETTER FUNCTIONS

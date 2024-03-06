@@ -27,11 +27,15 @@ class TestPlayer(QWidget):
         
         show_data = QPushButton("Show Data",self)
         show_data.clicked.connect(self.showData)
+        
+        print_data = QPushButton("Print Data",self)
+        print_data.clicked.connect(self.printData)
     
         v_box = QVBoxLayout(self)
         v_box.addWidget(load_but)
         v_box.addWidget(extract_data)
         v_box.addWidget(show_data)
+        v_box.addWidget(print_data)
         self.setLayout(v_box)
    
     # Function to dynamically load the music 
@@ -50,6 +54,11 @@ class TestPlayer(QWidget):
     
     def showData(self):
         self.extractor.setData()
+    
+    def printData(self):
+        self.song = self.extractor.getSong()
+        print(self.song)
+        
     
 def main():
     app = QApplication(sys.argv)
