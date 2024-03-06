@@ -36,6 +36,9 @@ class Song:
     def setFormat(self,format):
         self.format = format
     
+    def setCover(self,cover):
+        self.cover = cover
+    
     # Function to load the song location
     def setFile(self,filename):
         # Setting the file location
@@ -50,6 +53,8 @@ class Song:
             self.setFormat("ogg")
         elif filename.endswith(".flac"):
             self.setFormat("flac")
+        else:
+            self.setFormat("other")
     
     # GETTER FUNCTIONS
     def getTitle(self):
@@ -72,6 +77,9 @@ class Song:
     
     def getFile(self):
         return self.location
+    
+    def getCover(self):
+        return self.cover
     
     
         

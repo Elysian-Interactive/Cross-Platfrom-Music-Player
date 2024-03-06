@@ -74,10 +74,6 @@ class Extractor:
             
             return str(self.metadata['title']) + ".jpg"
             
-            
-            
-        
-        
     # Function to retrieve all of the data
     def getData(self):
         # Retrieving the data from the song file
@@ -91,7 +87,7 @@ class Extractor:
             
         elif self.song.getFormat() == "wav":
             audio = WAVE(self.song.getFile())
-            self.metadata = audio
+            self.metadata['duration'] = audio.info.length
             
         elif self.song.getFormat() == "ogg":
             audio = OggVorbis(self.song.getFile())
@@ -99,8 +95,6 @@ class Extractor:
             self.metadata['artist'] = audio.get('artist')[0]
             self.metadata['album'] = audio.get('album')
             self.metadata['duration'] = audio.info.length
-            
-            # Check if the ti
             
         elif self.song.getFormat() == "flac":
             audio = FLAC(self.song.getFile())
@@ -121,7 +115,17 @@ class Extractor:
         if(self.checkImage()):
             self.metadata['image'] = self.getImage()
         
-        print(self.metadata)
+        # Set this data in the song
+        self.song.setTitle(self.metadata['title'])
+        self.song.setArtist(self.metadata['artist'])
+        self.song.setAlbum(self.metadata['album'])
+        self.song.setDuration(self.metadata['duration'])
+        self.song.setCover(self.metadata['image'])
+        
+    
+    # Function to get the song object back
+    def getSong(self):
+        return self.song
 
     
 
