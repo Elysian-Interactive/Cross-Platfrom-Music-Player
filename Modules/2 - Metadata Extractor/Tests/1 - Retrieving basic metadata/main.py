@@ -46,10 +46,10 @@ class TestPlayer(QWidget):
     
     def extractData(self):
         self.extractor = Extractor.Extractor(self.song)
-        self.extractor.setData()
+        self.extractor.getData()
     
     def showData(self):
-        self.extractor.showData()
+        self.extractor.setData()
     
 def main():
     app = QApplication(sys.argv)
