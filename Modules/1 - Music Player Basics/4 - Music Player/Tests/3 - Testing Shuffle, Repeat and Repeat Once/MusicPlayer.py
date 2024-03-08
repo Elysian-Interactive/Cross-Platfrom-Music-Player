@@ -1,15 +1,17 @@
 # This module will combine all of the other modules to use them
 # It will implment its own loading, playback, playlist handler functions
 
-# Test 2 : This test will check for pause,resume,next,previous plus rewind to be included in previous functionality
+# Test 3 : This test will check for shuffle,repeat, functionality
 
 from Player import Player
 from Song import Song
 from PlayList import PlayList
 from Extractor import Extractor
-from List import List
+from List import List,CircularList
 import pickle # Used for serializing and here for saving playlists to disc
 import random # This module will be responsible for shuffling the songs in the playlist
+# This module will be needed to concurrently handle the pygame events 
+from PyQt5.QtCore import QTimer,pyqtSlot
 
 # Creating a custom playlist class to handle certain other features such as shuffle,repeat etc
 class MusicPlayList(PlayList):
@@ -18,9 +20,9 @@ class MusicPlayList(PlayList):
         # Calling the super class's constructor
         super().__init__(name)
         # Defining two new attribute
-        self.SHUFFLE = False
         self.REPEAT = False
         self.REPEATONCE = False
+        self.SHUFFLE = False
         # and defining a new list which will be responsible for operations like shuffle, sorting etc
         self.songs_copy = List()
         # The add and remove functions must be overwritten for this class
@@ -38,13 +40,13 @@ class MusicPlayList(PlayList):
         # Remove the song from the new list too
         self.songs.remove(title)
         self.songs_copy.remove(title)
-    
-    # Defining functions to set shuffle repeat repeat once
-    
+             
     # Introducing the new functions of shuffling and sorting the playlists
     def shuffle(self):
         # First we will check if the shuffle is on/off
-        if self.SHUFFLE is True:
+        if self.SHUFFLE is False:
+            # Then we set shuffle to be true
+            self.SHUFFLE = True
             # In this function first we will acquire all of the keys 
             keys = self.songs_copy.getKeys()
             # clear the current existing list 
@@ -55,6 +57,8 @@ class MusicPlayList(PlayList):
             for k in keys:
                 self.songs_copy.append(k,None)
         else:
+            # and now we will simply turn it off
+            self.SHUFFLE = False
             # In this case we will simply copy the orginal data back in the list
             keys = self.songs.getKeys()
             # clearing the current list
@@ -62,6 +66,18 @@ class MusicPlayList(PlayList):
             # Copying the data
             for k in keys:
                 self.songs_copy.append(k,None)
+    
+    # Function to toggle repeat, repeatonce
+    def repeat(self):
+        # Checking for every possible solution and assigning values accordingly
+        if self.REPEAT is False and self.REPEATONCE is False:
+            self.REPEAT = True
+        elif self.REPEAT is True and self.REPEATONCE is False:
+            self.REPEATONCE = True
+            self.REPEAT = False
+        elif self.REPEAT is False and self.REPEATONCE is True:
+            self.REPEAT = False
+            self.REPEATONCE = False
         
         
 class MusicPlayer:
@@ -74,6 +90,7 @@ class MusicPlayer:
         self.player = Player()
         # This is the metadata extractor module 
         self.extractor = Extractor()
+
         
     # Loading a single song
     def addSong(self,filename):
@@ -111,7 +128,11 @@ class MusicPlayer:
             
             # Also reset the pause and resume flag
             self.player.PAUSED = False
-    
+            
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.player.checkEvent)
+            self.timer.start(50)
+        
     # Function to pause the song
     def pauseResumeSong(self):
         # We will go through a couple of conditions first
@@ -145,8 +166,21 @@ class MusicPlayer:
                     break
             # Now we will obtain its next element and check if its None or not
             if current.next is None:
-                pass # Simply do nothing about that
-                return
+                # First we will check if the repeat option is enabled or not
+                if self.playing_queue.REPEAT is True:
+                    # In this case we will set the curent song to be the one at the head of the list
+                    # First set its playing status to be False
+                    self.playing_queue.current.setPlaying(False)
+                    # Retrieving the song at the head of the list
+                    new_song= self.playing_queue.songs_copy.head.key
+                    # Now setting this to be the current song
+                    self.playing_queue.current = self.playing_queue.songs.search(new_song).value
+                    # Now simply play it 
+                    self.playSong() 
+                    return True
+                else:
+                    pass # Simply do nothing about that
+                    return False # This will let us know if the new song is played or not
             else:  
                 # However if there is something then we will set the new current song
                 self.playing_queue.current.setPlaying(False)
@@ -155,6 +189,9 @@ class MusicPlayer:
                 
                 # And now we can call the play function
                 self.playSong()
+                
+                return True # Lets us know that the next song has been played
+                
             
     # Function to play the previous song in the list
     def playPreviousSong(self):
@@ -192,16 +229,40 @@ class MusicPlayer:
                 # 2. If its not less than 2 seconds then we can simply rewind the song
                 else:
                     self.playSong()
-                
-            
-                
-            
-        
-
-
     
-    
+    # Function to handle the event when the sound finished
+    @pyqtSlot()
+    def handleEndEvent(self):
+        # First of all we will check for the repeat once flag
+        if self.playing_queue.REPEATONCE is True:
+            # In this case we can simply rewind the sound
+            self.playSong()
+        # Now we will check if the simple repeat is checked on
+        elif self.playing_queue.REPEAT is True:
+            # In this case we will set the curent song to be the one at the head of the list
+            # First set its playing status to be False
+            self.playing_queue.current.setPlaying(False)
+            # Retrieving the song at the head of the list
+            new_song = self.playing_queue.songs_copy.head.key
+            # Now setting this to be the current song
+            self.playing_queue.current = self.playing_queue.songs.search(new_song).value
+            # Now simply play it 
+            self.playSong()
+           
+        # In the last case we will simply play the next song
+        else:
+            self.playNextSong()
         
+    # Function to toggle shuffle
+    def toggleShuffle(self):
+        # Simply call the shuffle function in the playing queue
+        self.playing_queue.shuffle()
+        # temp statement for testing
+        print(self.playing_queue.songs_copy.display())
     
-        
-            
+    # Function to toggle repeat
+    def toggleRepeat(self):
+        # simply call the repeat function
+        self.playing_queue.repeat()
+        # temp statement for testing
+        print(f'Repeat : {self.playing_queue.REPEAT}\nRepeatOnce : {self.playing_queue.REPEATONCE}')
