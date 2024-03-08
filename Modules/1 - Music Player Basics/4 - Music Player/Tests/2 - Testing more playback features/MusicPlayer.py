@@ -9,6 +9,7 @@ from PlayList import PlayList
 from Extractor import Extractor
 from List import List
 import pickle # Used for serializing and here for saving playlists to disc
+import random # This module will be responsible for shuffling the songs in the playlist
 
 # Creating a custom playlist class to handle certain other features such as shuffle,repeat etc
 class MusicPlayList(PlayList):
@@ -26,13 +27,40 @@ class MusicPlayList(PlayList):
     def add(self,song):
         if self.current is None:
             self.current = song
-        # Adding the song into the list
-        # as (key : Title, Value : Song Object)
-        self.songs.append(song.getTitle(),song)
-        # Also we will define which playlist the song belongs to
-        self.songs.search(song.getTitle()).value.setPlayList(self.name)
-        
 
+        self.songs.append(song.getTitle(),song)
+        # Adding the same to the new list too
+        self.songs_copy.append(song.getTitle(),None)
+        self.songs.search(song.getTitle()).value.setPlayList(self.name)
+    
+    def remove(self,title):
+        # Remove the song from the new list too
+        self.songs.remove(title)
+        self.songs_copy.remove(title)
+    
+    # Introducing the new functions of shuffling and sorting the playlists
+    def shuffle(self):
+        # First we will check if the shuffle is on/off
+        if self.SHUFFLE is True:
+            # In this function first we will acquire all of the keys 
+            keys = self.songs_copy.getKeys()
+            # clear the current existing list 
+            self.songs_copy.clear()
+            # shuffle them using the random module
+            random.shuffle(keys)
+            # Appending the same back in the list
+            for k in keys:
+                self.songs_copy.append(k,None)
+        else:
+            # In this case we will simply copy the orginal data back in the list
+            keys = self.songs.getKeys()
+            # clearing the current list
+            self.songs_copy.clear()
+            # Copying the data
+            for k in keys:
+                self.songs_copy.append(k,None)
+        
+        
 class MusicPlayer:
     # Constructor
     def __init__(self):
@@ -71,10 +99,15 @@ class MusicPlayer:
             self.player.unload()
             # Retreiving the file from the current song in the playlist
             song_file = self.playing_queue.current.getFile()
+            # Now we will toggle the playing state of the song to be true
+            self.playing_queue.current.setPlaying(True)
             # Passing this file to be loaded into the player
             self.player.load(song_file)
             # Now playing the song
             self.player.play()
+            
+            # Also reset the pause and resume flags
+            self.player.PAUSED = False
     
     # Function to pause the song
     def pauseResumeSong(self):
@@ -93,6 +126,76 @@ class MusicPlayer:
             if self.player.PAUSED:
                 # Now we can resume the song
                 self.player.resume()
+            
+    # Function to play the next song in the list
+    def playNextSong(self):
+        # First make sure to check a couple of conditions
+        # 1. If the list is empty then its no use to play next
+        if self.playing_queue.isEmpty():
+            pass
+        else:
+            # Now first we will search for the song that is currently playing
+            current = None
+            for k in self.playing_queue.songs_copy.getKeys():
+                if self.playing_queue.songs.search(k).value.getPlaying() is True:
+                    current = self.playing_queue.songs.search(k)
+                    break
+            # Now we will obtain its next element and check if its None or not
+            if current.next is None:
+                pass # Simply do nothing about that
+                return
+            else:  
+                # However if there is something then we will set the new current song
+                self.playing_queue.current.setPlaying(False)
+                # Setting the new current as the next song
+                self.playing_queue.current = current.next.value
+                
+                # And now we can call the play function
+                self.playSong()
+            
+    # Function to play the previous song in the list
+    def playPreviousSong(self):
+        # 1. Check if the queue is empty 
+        if self.playing_queue.isEmpty():
+            pass
+        else:
+            # Now first we will search for the song that is currently playing
+            current = None
+            for k in self.playing_queue.songs_copy.getKeys():
+                if self.playing_queue.songs.search(k).value.getPlaying() is True:
+                    current = self.playing_queue.songs.search(k)
+                    break
+            # Now we will obtain its previous element and check if its None or not
+            # Now first we will search for the song that is currently playing
+            current = None
+            for k in self.playing_queue.songs_copy.getKeys():
+                if self.playing_queue.songs.search(k).value.getPlaying() is True:
+                    current = self.playing_queue.songs.search(k)
+                    break
+            # Now we will obtain its next element and check if its None or not
+            if current.prev is None:
+                # If there exists no song previous to current one then we can simply rewind it
+                self.playSong()
+            else:  
+                # However if there is something then we will again check one more condition
+                # We will check if the elapsed time is less than 2 seconds
+                # 1. If it is less than 2 seconds then we will play the previous song
+                if self.player.getElapsedTime() < 2000:
+                    self.playing_queue.current.setPlaying(False)
+                    # Setting the new current as the next song
+                    self.playing_queue.current = current.prev.value
+                    # And now we can call the play function
+                    self.playSong()
+                # 2. If its not less than 2 seconds then we can simply rewind the song
+                else:
+                    self.playSong()
+                
+    # Function to shuffle songs
+    def shuffleSongs(self):
+        # First of all we will check if the list is empty
+            
+                
+            
         
 
 

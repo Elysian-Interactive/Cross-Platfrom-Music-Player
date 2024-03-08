@@ -93,10 +93,7 @@ class Player:
     
     # Function to get the elapsed time
     def getElapsedTime(self):
-        try:
-            return self.music.get_pos() # Returns the time in milliseconds
-        except pygame.error:
-            print("No music file is loaded")
+        return self.music.get_pos() # Returns the time in milliseconds
             
     
     # Function to set the elapsed time

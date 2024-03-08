@@ -1,6 +1,6 @@
 # test file
 import sys
-from PyQt5.QtWidgets import (QApplication,QWidget,QPushButton,QFileDialog,QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication,QWidget,QPushButton,QFileDialog,QVBoxLayout,QHBoxLayout)
 from MusicPlayer import MusicPlayer
 
 class Test(QWidget):
@@ -26,11 +26,22 @@ class Test(QWidget):
         pause_resume_but = QPushButton("Pause/Resume",self)
         pause_resume_but.clicked.connect(self.pauseResumeSong)
         
+        next_but = QPushButton("Next",self)
+        next_but.clicked.connect(self.nextSong)
+        
+        prev_but = QPushButton("Prev",self)
+        prev_but.clicked.connect(self.prevSong)
+        
+        h_box = QHBoxLayout()
+        h_box.addWidget(prev_but)
+        h_box.addWidget(pause_resume_but)
+        h_box.addWidget(next_but)
+        
 
         v_box = QVBoxLayout()
         v_box.addWidget(load_but)
         v_box.addWidget(play_but)
-        v_box.addWidget(pause_resume_but)
+        v_box.addLayout(h_box)
 
         
         self.setLayout(v_box)
@@ -45,6 +56,12 @@ class Test(QWidget):
     
     def pauseResumeSong(self):
         self.m_player.pauseResumeSong()
+    
+    def nextSong(self):
+        self.m_player.playNextSong()
+    
+    def prevSong(self):
+        self.m_player.playPreviousSong()
 
         
 def main():

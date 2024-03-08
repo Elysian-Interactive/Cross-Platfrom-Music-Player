@@ -92,3 +92,7 @@ class List:
             keys.append(current.key)
             current = current.next
         return keys
+    
+    # Function to clear the list 
+    def clear(self):
+        self.head = None

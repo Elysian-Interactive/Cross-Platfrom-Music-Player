@@ -22,7 +22,7 @@ class PlayList:
     def add(self,song):
         # Adding the song to the playlist
         # If there is no current song set then simply make the newly added
-        # song as the current song
+        # song as the current song 
         if self.current is None:
             self.current = song
         # Adding the song into the list
