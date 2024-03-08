@@ -29,7 +29,7 @@ class PlayList:
         # as (key : Title, Value : Song Object)
         self.songs.append(song.getTitle(),song)
         # Also we will define which playlist the song belongs to
-        self.songs.search(song.getTitle()).setPlayList(self.name)
+        self.songs.search(song.getTitle()).value.setPlayList(self.name)
         
     # Function to remove the song from the playlist
     def remove(self,title):
@@ -39,4 +39,8 @@ class PlayList:
     # Function to get the desired song object as per the key
     def search(self,title):
         return self.songs.search(title)
-         
+    
+    # Function to check if the playlist is empty or not
+    def isEmpty(self):
+        return self.songs.isEmpty()
+        

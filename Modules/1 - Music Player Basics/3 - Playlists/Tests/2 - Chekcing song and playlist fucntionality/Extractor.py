@@ -29,6 +29,9 @@ class Extractor:
     # Function to load the song
     def loadSong(self,song):
         self.song = song
+        # Calling these functions directly after loading the song
+        self.getData()
+        self.setData()
     
     # Function to check if the image exists in the file
     # Returns true if the image exists else returns false
@@ -131,7 +134,7 @@ class Extractor:
         # Checking if the title of the song is None
         # If so then we can simply put it as the name of the file
         if self.metadata['title'] == None or self.metadata['title'] == "":
-            self.metadata['title'] = Path(self.song.getFile()).stem + "." + self.song.getFormat()
+            self.metadata['title'] = Path(self.song.getFile()).stem 
         
         # Now checking if the image file exists
         if(self.checkImage()):

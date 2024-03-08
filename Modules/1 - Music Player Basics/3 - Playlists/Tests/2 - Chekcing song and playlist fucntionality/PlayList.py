@@ -29,7 +29,7 @@ class PlayList:
         # as (key : Title, Value : Song Object)
         self.songs.append(song.getTitle(),song)
         # Also we will define which playlist the song belongs to
-        self.songs.search(song.getTitle()).setPlayList(self.name)
+        self.songs.search(song.getTitle()).value.setPlayList(self.name)
         
     # Function to remove the song from the playlist
     def remove(self,title):

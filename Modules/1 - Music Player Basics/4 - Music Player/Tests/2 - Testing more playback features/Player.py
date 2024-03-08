@@ -13,8 +13,9 @@
 
 import pygame
 from pygame import mixer
-# Importing our custom PlayList Module
-#import PlayList
+# for handling events in pyqt you must define your own signals and slots 
+# but for now we can simply check the length of the elapsed time againsts
+# that of defined by the player
 
 class Player:
 
@@ -24,7 +25,10 @@ class Player:
         mixer.init() # Enables the playback
         # Creating a music object which will store and play all the sound
         self.music = mixer.music
-        # Creating a list to hold the music to be played
+        # Different kinds of events must be declared before hand
+        self.NEXT = pygame.USEREVENT + 1 # Custome Event
+        # Parameter to check the state of the player
+        self.PAUSED = False
         
         print("MESSAGE : Player Initialization Successful")
         
@@ -52,6 +56,7 @@ class Player:
     # Function to pause the music
     def pause(self):
         self.music.pause()
+        self.PAUSED = True
     
     # Function to rewind the music
     def rewind(self):
@@ -60,6 +65,7 @@ class Player:
     # Function to resume music once its paused
     def resume(self):
         self.music.unpause()
+        self.PAUSED = False
     
     # Function to stop the play back 
     def stop(self):
@@ -98,3 +104,10 @@ class Player:
         self.muisc.set_pos(pos)
 
 # EndEvent handling is left
+
+    def setEndEvent(self,event):
+        # Sends an event to the mixer
+        self.music.set_endevent(event)
+        
+    
+        

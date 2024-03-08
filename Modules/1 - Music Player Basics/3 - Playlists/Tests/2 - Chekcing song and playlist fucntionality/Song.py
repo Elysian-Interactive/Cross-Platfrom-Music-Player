@@ -14,10 +14,11 @@ class Song:
         self.playing = None # Boolean value defines if the song is currently 
                             # playing or not
         self.format = None # Defines the format of the song
+        self.playlist = None # Defines which playlist the song belongs to
     
     # String Equivalent of the function
     def __str__(self):
-        return f'Title : {self.title}\nArtist : {self.artist}\nAlbum : {self.album}\nCover : {self.cover}\nDuration : {self.duration}\nFormat : {self.format}\n'
+        return f'Title : {self.title}\nArtist : {self.artist}\nAlbum : {self.album}\nPlayList : {self.playlist}\nCover : {self.cover}\nDuration : {self.duration}\nFormat : {self.format}\n'
     
     # Utility functions
     
@@ -43,6 +44,9 @@ class Song:
     def setCover(self,cover):
         self.cover = cover
     
+    def setPlayList(self,playlist):
+        self.playlist = playlist
+    
     # Function to load the song location
     def setFile(self,filename):
         # Setting the file location
@@ -57,8 +61,6 @@ class Song:
             self.setFormat("ogg")
         elif filename.endswith(".flac"):
             self.setFormat("flac")
-        else:
-            self.setFormat("other")
     
     # GETTER FUNCTIONS
     def getTitle(self):
@@ -84,6 +86,9 @@ class Song:
     
     def getCover(self):
         return self.cover
+    
+    def getPlayList(self):
+        return self.playlist
     
     
         
