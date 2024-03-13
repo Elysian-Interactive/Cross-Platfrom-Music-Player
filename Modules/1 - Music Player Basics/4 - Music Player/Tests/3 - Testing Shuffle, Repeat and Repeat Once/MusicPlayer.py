@@ -152,6 +152,8 @@ class MusicPlayer:
                 self.player.resume()
             
     # Function to play the next song in the list
+    # MISTAKE : In the play next and play previous functions the sequence of the playing queue is referenced
+    # from the original songs list instead of the copy songs list
     def playNextSong(self):
         # First make sure to check a couple of conditions
         # 1. If the list is empty then its no use to play next
@@ -162,7 +164,10 @@ class MusicPlayer:
             current = None
             for k in self.playing_queue.songs_copy.getKeys():
                 if self.playing_queue.songs.search(k).value.getPlaying() is True:
-                    current = self.playing_queue.songs.search(k)
+                    # CHANGE : Instead of the holding the reference of the original song
+                    # we will hold the reference of the songs_copy song
+                    #current = self.playing_queue.songs.search(k)
+                    current = self.playing_queue.songs_copy.search(k)
                     break
             # Now we will obtain its next element and check if its None or not
             if current.next is None:
@@ -185,8 +190,12 @@ class MusicPlayer:
                 # However if there is something then we will set the new current song
                 self.playing_queue.current.setPlaying(False)
                 # Setting the new current as the next song
-                self.playing_queue.current = current.next.value
                 
+                # CHANGES HERE FOR SHUFFLE ERROR
+                # Instead of the below commented code we will derive the next song from the songs_copy list
+                # self.playing_queue.current = current.next.value
+                self.playing_queue.current = self.playing_queue.songs.search(current.next.key).value
+               
                 # And now we can call the play function
                 self.playSong()
                 
@@ -194,6 +203,7 @@ class MusicPlayer:
                 
             
     # Function to play the previous song in the list
+    # CHANGES : Making the same changes here
     def playPreviousSong(self):
         # 1. Check if the queue is empty 
         if self.playing_queue.isEmpty():
@@ -203,14 +213,7 @@ class MusicPlayer:
             current = None
             for k in self.playing_queue.songs_copy.getKeys():
                 if self.playing_queue.songs.search(k).value.getPlaying() is True:
-                    current = self.playing_queue.songs.search(k)
-                    break
-            # Now we will obtain its previous element and check if its None or not
-            # Now first we will search for the song that is currently playing
-            current = None
-            for k in self.playing_queue.songs_copy.getKeys():
-                if self.playing_queue.songs.search(k).value.getPlaying() is True:
-                    current = self.playing_queue.songs.search(k)
+                    current = self.playing_queue.songs_copy.search(k)
                     break
             # Now we will obtain its next element and check if its None or not
             if current.prev is None:
@@ -223,7 +226,7 @@ class MusicPlayer:
                 if self.player.getElapsedTime() < 2000:
                     self.playing_queue.current.setPlaying(False)
                     # Setting the new current as the next song
-                    self.playing_queue.current = current.prev.value
+                    self.playing_queue.current = self.playing_queue.songs.search(current.prev.key).value
                     # And now we can call the play function
                     self.playSong()
                 # 2. If its not less than 2 seconds then we can simply rewind the song
