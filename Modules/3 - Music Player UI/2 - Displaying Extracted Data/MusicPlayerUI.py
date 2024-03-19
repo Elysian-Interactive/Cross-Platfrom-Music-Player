@@ -2,23 +2,36 @@
 import sys
 sys.path.insert(0,"Dependencies")
 
-from PyQt5.QtWidgets import (QApplication,QWidget,QPushButton,QFileDialog,QVBoxLayout,QHBoxLayout)
+# This file will mainly focus on adding buttons to the UI for:
+# 1. Pause/Play , forward, rewind, volume, shuffle, rewind
+# 2. The Slider which depicts time elapsed of the song
+# 3. Displaying the extracted metadata on the screen 
+
+# Importing the necessary modules
+from PyQt5.QtWidgets import (QApplication,QWidget,QPushButton,QFileDialog,QVBoxLayout
+                            ,QHBoxLayout,QGridLayout,QSlider,QMenuBar,QStatusBar,QAction
+                            ,QMenu)
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt, QSize
 from MusicPlayer import MusicPlayer
 
-class Test(QWidget):
+class MusicPlayerUI(QWidget):
+    # Constructor
     def __init__(self): 
         super().__init__()
-        self.m_player = MusicPlayer()
+        self.music_player = MusicPlayer()
         self.initializeUI()
         
     def initializeUI(self):
-        self.setWindowTitle("Music Player Test")
+        self.setWindowTitle("MusicHub")
         self.setGeometry(100,100,400,400)
-        self.setupTest()
+        self.setupMenus()
+        self.setupButtons()
+
         
         self.show()
     
-    def setupTest(self):
+    def setupButtons(self):
         load_but = QPushButton("Load Song",self)
         load_but.clicked.connect(self.loadSong)
         
@@ -91,7 +104,7 @@ class Test(QWidget):
         
 def main():
     app = QApplication(sys.argv)
-    window = Test()
+    window = MusicPlayerUI()
     sys.exit(app.exec_())
 
 # Calling the main Function
