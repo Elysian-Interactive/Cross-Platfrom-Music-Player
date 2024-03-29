@@ -8,47 +8,78 @@
 import sys
 from PyQt5.QtWidgets import (QApplication,QWidget,QPushButton,QLabel,QHBoxLayout
                             ,QVBoxLayout,QGridLayout,QSizePolicy,QSlider,QToolTip
-                            ,QStackedWidget)
+                            ,QStackedWidget,QScrollArea)
 from PyQt5.QtGui import QIcon,QPixmap,QFont
 from PyQt5.QtCore import Qt, QSize, QTimer
 
-class Test(QWidget):
+# This class will define a visible song entity which will be visible in the scrollable area
+class VisibleSong(QWidget):
+    def __init__(self,title):
+        super().__init__()
+        self.title = title # The title of the song
+        self.initializeUI()
+        
+    
+    def initializeUI(self):
+        # Here we will create a QLabel to be shown as the title of the song
+        # 2 button : one for playing the song and one for removing the song (maybe later)
+        QToolTip.setFont(QFont('Helvetica',10))
+        self.visible_title = QLabel(self.title,self)
+        self.visible_title.setFont(QFont('Ariel',15))
+        
+        # Button for playing the song
+        self.play_song_but = QPushButton(self)
+        self.play_song_but.setIcon(QIcon("Assets/small-play.png"))
+        self.play_song_but.setIconSize(QSize(20,20))
+        self.play_song_but.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.play_song_but.setStyleSheet("background-color : transparent")
+        self.play_song_but.resize(QSize(20,20))
+        self.play_song_but.setToolTip("Play Song")
+        
+        # Lets create a layout to arrange the things
+        h_box = QHBoxLayout()
+        h_box.addWidget(self.play_song_but)
+        h_box.addWidget(self.visible_title)
+        h_box.addStretch()
+        
+        self.setLayout(h_box)
+
+class MusicPlayerUI(QWidget):
     def __init__(self):
         super().__init__()
         self.initializeUI()
         
     def initializeUI(self):
-        self.setWindowTitle("UI Look Test")
         self.setGeometry(100,100,400,400)
         self.setupUI()
         
-        self.show()
     
     def setupUI(self):
         # Creating the tool tip to display info about the buttons
         QToolTip.setFont(QFont('Helvetica',10))
+        
+        # Creating a size policy and button size for all the button
+        but_size_policy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        but_size = QSize(35,35)
     
         # Make a global grid layout
-        grid = QGridLayout(self)
+        grid = QGridLayout()
         
         # Layout for handling the image
-        image_layout = QHBoxLayout(self)
+        image_layout = QHBoxLayout()
         
         # Make a hbox layout to store the different buttons with icons
-        playback_layout = QHBoxLayout(self)
+        playback_layout = QHBoxLayout()
         
         # Make a hbox layout for storing the slider and corresponding labels
-        info_layout = QHBoxLayout(self)
+        info_layout = QHBoxLayout()
         
         # Make a hbox layout for storing the volume slider
-        vol_layout = QHBoxLayout(self)
-        
-        # Creating a Stacked Widget for switching between the playlist view and
-        # the image view
-        
+        vol_layout = QHBoxLayout()
+                
         # Creating a QLabel to store the image
-        self.image_widget = QWidget()
-        self.image_label = QLabel(self)
+        self.image_widget = QWidget(self)
+        self.image_label = QLabel(self.image_widget)
         self.image_label.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
         pixmap = QPixmap("Assets/musical.png")
         pixmap = pixmap.scaled(500,500)
@@ -58,15 +89,67 @@ class Test(QWidget):
         self.playing_queue_widget = QWidget()
         # Create labels and buttons
         self.pq_title = QLabel("Playing Queue",self.playing_queue_widget)
-        self.pq_title.setFont(QFont('Ariel',20))
+        self.pq_title.setFont(QFont('Ariel',30))
         
-        self.add_song_but = QPushButton("Add Song(s)",self.playing_queue_widget)
-        self.add_folder_but = QPushButton("Add Folder")
+        self.add_song_but = QPushButton(self.playing_queue_widget)
+        self.add_song_but.setIcon(QIcon("Assets/add.png"))
+        self.add_song_but.setIconSize(QSize(45,45))
+        self.add_song_but.setSizePolicy(but_size_policy)
+        self.add_song_but.setStyleSheet("background-color : transparent")
+        self.add_song_but.resize(QSize(45,45))
+        self.add_song_but.setToolTip("Add Song(s)")
+        
+        self.add_folder_but = QPushButton(self.playing_queue_widget)
+        self.add_folder_but.setIcon(QIcon("Assets/songs-folder.png"))
+        self.add_folder_but.setIconSize(QSize(45,45))
+        self.add_folder_but.setSizePolicy(but_size_policy)
+        self.add_folder_but.setStyleSheet("background-color : transparent")
+        self.add_folder_but.resize(QSize(45,45))
+        self.add_folder_but.setToolTip("Add Song Folder")
+        
         self.clear_song_but = QPushButton(self.playing_queue_widget)
+        self.clear_song_but.setIcon(QIcon("Assets/bin.png"))
+        self.clear_song_but.setIconSize(QSize(38,38))
+        self.clear_song_but.setSizePolicy(but_size_policy)
+        self.clear_song_but.setStyleSheet("background-color : transparent")
+        self.clear_song_but.resize(QSize(38,38))
+        self.clear_song_but.setToolTip("Clear All")
         
-        # Creating a size policy and button size for all the button
-        but_size_policy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        but_size = QSize(35,35)
+        # Scrollable list item
+        song_scroll_area = QScrollArea()
+        song_area = QWidget()
+        self.songs_box = QVBoxLayout() # for handling the layout within song_area
+        self.songs_box.setAlignment(Qt.AlignTop)
+        song_area.setLayout(self.songs_box)
+        
+        # Setting up its properites
+        song_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        song_scroll_area.setWidgetResizable(True)
+        song_scroll_area.setWidget(song_area)
+        
+        # Hbox for the various buttons
+        song_area_hbox = QHBoxLayout()
+        song_area_hbox.setSpacing(10)
+        song_area_hbox.addWidget(self.add_song_but)
+        song_area_hbox.addWidget(self.add_folder_but)
+        song_area_hbox.addWidget(self.clear_song_but)
+        song_area_hbox.addStretch()
+        
+        # Adding vbox to add them all
+        song_area_vbox = QVBoxLayout()
+        song_area_vbox.addWidget(self.pq_title)
+        song_area_vbox.addLayout(song_area_hbox)
+        song_area_vbox.addWidget(song_scroll_area)
+        
+        self.playing_queue_widget.setLayout(song_area_vbox)
+        
+        # Creating a Stacked Widget for switching between the playlist view and
+        # the image view
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.image_widget)
+        self.stack.addWidget(self.playing_queue_widget)
+        self.stack.setCurrentIndex(0)
+        self.stack.show()
         
         # Creating a QWidget to display information about the song and artist
         # Additional features : constratint the horizontal width
@@ -144,6 +227,7 @@ class Test(QWidget):
         self.queue_but.setStyleSheet("background-color : transparent")
         self.queue_but.resize(QSize(30,30))
         self.queue_but.setToolTip("Playing Queue")
+        self.queue_but.clicked.connect(self.switchWidget)
         
         # Creating widgets to be added in the info section
         self.current_time = QLabel("00:00",self)
@@ -206,7 +290,7 @@ class Test(QWidget):
         # Adding this layout to the grid layout
         grid.rowStretch(20)
         grid.columnStretch(5)
-        grid.addWidget(self.image_widget,0,0,15,5)
+        grid.addWidget(self.stack,0,0,15,5)
         grid.addLayout(info_layout,15,0,1,5)
         grid.addLayout(vol_layout,16,0,1,5)
         grid.addLayout(playback_layout,17,0,2,5)
@@ -219,6 +303,12 @@ class Test(QWidget):
         new_text = current_text[1:] + current_text[0]
         self.song_name.setText(new_text)    
     
-app = QApplication(sys.argv)
-window = Test()
-sys.exit(app.exec_())
+    # Function to switch between different stacked widgets
+    def switchWidget(self):
+        current = self.stack.currentIndex()
+        # Changing the pages based on their indexes
+        if current == 0:
+            self.stack.setCurrentIndex(1)
+        else:
+            self.stack.setCurrentIndex(0)
+    
