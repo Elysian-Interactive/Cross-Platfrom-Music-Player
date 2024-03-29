@@ -36,6 +36,9 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
     
         # Connecting the specific buttons to their respective signals
         self.add_song_but.clicked.connect(self.addSong)
+        self.play_but.clicked.connect(self.pauseResumeSong)
+        
+       
     
         
     
@@ -74,6 +77,13 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         self.end_time.setText(" " + self.seconds_to_mm_ss(song_length))
         # 2. Playing the song
         self.music_player.playSong()
+        
+        # Also whenever this function is called we must change the icon on the play/pause button
+        self.play_but.setIcon(QIcon("Assets/pause.png"))
+        self.play_but.setIconSize(QSize(64,64))
+        self.play_but.setStyleSheet("background-color : transparent")
+        self.play_but.resize(QSize(64,64))
+        
         # 3. Repeatedly updating the seek bar
         timer = QTimer(self)
         timer.timeout.connect(self.updateSeekBar)
@@ -164,8 +174,24 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         seconds = seconds % 60
         return f"{minutes:02d}:{seconds:02d}"
     
-    def pauseResumeSong(self):
-        self.m_player.pauseResumeSong()
+    def pauseResumeSong(self):        
+        self.music_player.pauseResumeSong()
+        # Here we want to make sure
+        
+        if self.music_player.player.isPlaying():
+            if not self.music_player.player.PAUSED:
+                self.play_but.setIcon(QIcon("Assets/pause.png"))
+                self.play_but.setIconSize(QSize(64,64))
+                self.play_but.setStyleSheet("background-color : transparent")
+                self.play_but.resize(QSize(64,64))
+  
+        elif not self.music_player.player.isPlaying():
+            if self.music_player.player.PAUSED:
+                self.play_but.setIcon(QIcon("Assets/play-button.png"))
+                self.play_but.setIconSize(QSize(60,60))
+                self.play_but.setStyleSheet("background-color : transparent")
+                self.play_but.resize(QSize(60,60))  
+
     
     def nextSong(self):
         self.m_player.playNextSong()
