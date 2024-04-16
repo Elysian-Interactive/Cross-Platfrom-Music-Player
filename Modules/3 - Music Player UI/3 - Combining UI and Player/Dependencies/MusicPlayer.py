@@ -88,6 +88,8 @@ class MusicPlayer:
         self.player = Player()
         # This is the metadata extractor module 
         self.extractor = Extractor()
+        # Another variable we can check is the song finished 
+        self.SONG_FINISHED = False
         
     # Loading a single song
     def addSong(self,filename):
@@ -120,6 +122,8 @@ class MusicPlayer:
             self.playing_queue.current.setPlaying(True)
             # Passing this file to be loaded into the player
             self.player.load(song_file)
+            # Also to let the song finsihed flag false
+            self.SONG_FINISHED = False
             # Now playing the song
             self.player.play()
             
@@ -174,15 +178,18 @@ class MusicPlayer:
                     # First set its playing status to be False
                     self.playing_queue.current.setPlaying(False)
                     # Retrieving the song at the head of the list
-                    new_song= self.playing_queue.songs_copy.head.key
+                    new_song = self.playing_queue.songs_copy.head.key
                     # Now setting this to be the current song
-                    self.playing_queue.current = self.playing_queue.songs.search(new_song).value
+                    # Commenting out the below section bcz we don't want to set the current song just now
+                    # self.playing_queue.current = self.playing_queue.songs.search(new_song).value
                     # Now simply play it 
-                    self.playSong() 
-                    return True
+                    # self.playSong() 
+                    # return True # New modification as per the integration instead of returning true or false
+                    # we can directly return the key if its found
                 else:
-                    pass # Simply do nothing about that
-                    return False # This will let us know if the new song is played or not
+                    # pass # Simply do nothing about that
+                    # return False # This will let us know if the new song is played or not
+                    return None
             else:  
                 # However if there is something then we will set the new current song
                 self.playing_queue.current.setPlaying(False)
@@ -191,12 +198,14 @@ class MusicPlayer:
                 # CHANGES HERE FOR SHUFFLE ERROR
                 # Instead of the below commented code we will derive the next song from the songs_copy list
                 # self.playing_queue.current = current.next.value
-                self.playing_queue.current = self.playing_queue.songs.search(current.next.key).value
+                # self.playing_queue.current = self.playing_queue.songs.search(current.next.key).value
                
                 # And now we can call the play function
-                self.playSong()
+                # self.playSong()
                 
-                return True # Lets us know that the next song has been played
+                # return True # Lets us know that the next song has been played
+                return current.next.key
+                
                 
             
     # Function to play the previous song in the list
@@ -215,7 +224,8 @@ class MusicPlayer:
             # Now we will obtain its next element and check if its None or not
             if current.prev is None:
                 # If there exists no song previous to current one then we can simply rewind it
-                self.playSong()
+                # self.playSong()
+                return current.key # New return value after integration
             else:  
                 # However if there is something then we will again check one more condition
                 # We will check if the elapsed time is less than 2 seconds
@@ -223,12 +233,14 @@ class MusicPlayer:
                 if self.player.getElapsedTime() < 2000:
                     self.playing_queue.current.setPlaying(False)
                     # Setting the new current as the next song
-                    self.playing_queue.current = self.playing_queue.songs.search(current.prev.key).value
+                    # self.playing_queue.current = self.playing_queue.songs.search(current.prev.key).value
                     # And now we can call the play function
-                    self.playSong()
+                    # self.playSong()
+                    return current.prev.key
                 # 2. If its not less than 2 seconds then we can simply rewind the song
                 else:
-                    self.playSong()
+                    return current.key
+                    # self.playSong()
     
     # Function to handle the event when the sound finished
     @pyqtSlot()
@@ -251,7 +263,11 @@ class MusicPlayer:
            
         # In the last case we will simply play the next song
         else:
+            self.SONG_FINISHED = True # This will force to update the flag even if there is no next song
             self.playNextSong()
+        
+        # Here once the song is finished we will set the corresponding flag
+   
         
     # Function to toggle shuffle
     def toggleShuffle(self):

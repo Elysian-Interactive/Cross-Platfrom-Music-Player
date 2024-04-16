@@ -37,11 +37,11 @@ class Player(QObject): # Inheriting the necessary class
         self.END_EVENT = pygame.USEREVENT + 1 # Custome Event
         # Parameter to check the state of the player
         self.PAUSED = False
+        # Variable to checking Mute functions
+        self.MUTE = False
         # Setting up the end event so that it can be caught later
         self.setEndEvent()
-        
 
-        
     # Function to load the music file
     def load(self,filename):            
         # Loads the music in to the music object
@@ -106,9 +106,9 @@ class Player(QObject): # Inheriting the necessary class
         return self.music.get_pos() # Returns the time in milliseconds
             
     
-    # Function to set the elapsed time
-    def setElapsedTime(self,pos):
-        self.muisc.set_pos(pos)
+    # Function to set the playback position
+    def setPlaybackTime(self,pos):
+        self.music.set_pos(pos)
 
 # EndEvent handling is left
 

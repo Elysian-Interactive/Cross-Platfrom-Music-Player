@@ -154,7 +154,7 @@ class MusicPlayerUI(QWidget):
         # Creating a QWidget to display information about the song and artist
         # Additional features : constratint the horizontal width
         song_info = QWidget(self)
-        song_info.setMinimumSize(150,80)
+        song_info.setMinimumSize(200,80)
         song_info.setMaximumSize(200,80)
         song_info.setStyleSheet("QWidget#window{"
                                 "border: 2px solid rgba(0, 0, 0, 0.2);" 
@@ -205,7 +205,7 @@ class MusicPlayerUI(QWidget):
         self.prev_but.setToolTip("Previous Song")
         
         self.shuffle_but = QPushButton(self)
-        self.shuffle_but.setIcon(QIcon("Assets/shuffle.png"))
+        self.shuffle_but.setIcon(QIcon("Assets/shuffle-default.png"))
         self.shuffle_but.setIconSize(but_size)
         self.shuffle_but.setSizePolicy(but_size_policy)
         self.shuffle_but.setStyleSheet("background-color : transparent")
@@ -213,7 +213,7 @@ class MusicPlayerUI(QWidget):
         self.shuffle_but.setToolTip("Shuffle")
         
         self.repeat_but = QPushButton(self)
-        self.repeat_but.setIcon(QIcon("Assets/repeat.png"))
+        self.repeat_but.setIcon(QIcon("Assets/repeat-default.png"))
         self.repeat_but.setIconSize(QSize(30,30))
         self.repeat_but.setSizePolicy(but_size_policy)
         self.repeat_but.setStyleSheet("background-color : transparent")
