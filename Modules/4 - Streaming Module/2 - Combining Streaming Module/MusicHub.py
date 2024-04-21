@@ -12,6 +12,8 @@ from pathlib import Path
 import os
 import socket
 import threading
+import select
+import tqdm
 
 # In this file we will connect the Player and UI part together
 
@@ -28,10 +30,21 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         # in the scroll area
         self.visible_songs_list = List()
         
-        # Setting up a connection between the 
-        self.server = None
+        # Setting up a connection between the systems
+        self.server = None 
+        self.client = None
+        '''
+        self.CLIENT_CONNECTED = False
         self.server_thread = threading.Thread(target = self.startServer)
         self.server_thread.start()
+        '''
+        
+        '''
+        # Starting the receving end from here after a successful connection
+        self.recv_timer = QTimer()
+        self.recv_timer.timeout.connect(self.recvData)
+        self.recv_timer.start(500)
+        '''
         
         # Timer object for updating the seek bar
         self.seek_timer = QTimer()
@@ -43,23 +56,185 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         self.setWindowTitle("MusicHub")
         self.setStyleSheet("color : rgba(#FFFFF7);")
         self.show()
-        
+    
+    '''    
     # Function to initialize server
     def startServer(self):
         # TEMPORARY CODE
         try:
             self.server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             print("Starting Server...")
+            # Set a timeout on the server so that it don't become unresponsive
+            #self.server.settimeout(10)
             self.server.bind(("",9999))
-            self.server.listen()
-            client,addr = self.server.accept()
+            self.server.listen(5)
+            self.client,addr = self.server.accept()
             print("Connection from : " + str(addr[0]))
+            #self.CLIENT_CONNECTED = True
+            self.client.send("CONNECTED".encode())
         except Exception as e:
             print("Failed to create server : " + str(e))
+            # Try again
+            self.startServer()
     
+    # Function to receive data from the client
+    def recvData(self):
+        try:
+            if self.client:
+                # Get the file descriptor of the socket
+                fd = self.client.fileno()
+                # Use select to check for readability
+                ready_to_read, _, _ = select.select([fd], [], [], 0.1)
+                if ready_to_read:
+                    data = self.client.recv(1024)
+                    if data:
+                        print(data.decode()) 
+        except Exception as e:
+            print("Error:", e)
+                
+    # Function to start the send function on a separate thread
+    def sendThread(self,key):
+        send_thread = threading.Thread(target = self.sendData,args = (key,))
+        send_thread.start()
+    
+    # Function to send data to the client
+    def sendData(self,key):
+        # if self.CLIENT_CONNECTED:
+        if self.client:
+            # First obtain the song object 
+            song = self.music_player.playing_queue.songs.search(key).value
+            # Getting the file name
+            file_name = song.getTitle() + "." + song.getFormat()
+            # Sending the file name
+            self.client.send(str(file_name).encode())
+            # Now obtaining the size of the file and sending it
+            file_size = os.path.getsize(song.getFile())
+            self.client.send(str(file_size).encode())
+            
+            # Now opening the file and sending it
+            file = open(str(song.getFile()),'rb')
+            data = file.read()
+            self.client.sendall(data)
+            print("Sent all data")
+            self.client.send(b'<END>') # End case
+            print("sent end tag")
+            file.close()
+           
+            
+    '''
+    # Function to initialize the send process over a thread
+    def sendThread(self,key):
+        send_thread = threading.Thread(target = self.sendSong,args = (key,))
+        send_thread.start()
+    
+    # Function to send song to the other app
+    def sendSong(self,key):
+        # First setup the client
+        try:
+            self.client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            self.client.settimeout(10) # 10 sec limit on obtaining the connection
+            print("Starting Sender...")
+            # Connecting the client to the server
+            self.client.connect(("127.0.0.1",9999))
+            # Rececing acknowledgment of the connection
+            data = self.client.recv(1024).decode()
+            if data == "CONNECTED":
+                print("Successfully Connected to the application...")
+                QMessageBox.information(self,"Notification","Connection Successful!\nDo you wish to proceed?",QMessageBox.Yes | QMessageBox.No)
+            
+            # Sending the data now
+            song = self.music_player.playing_queue.songs.search(key).value
+            # Getting the file name
+            file_name = song.getTitle() + "." + song.getFormat()
+            # Sending the file name
+            self.client.send(str(file_name).encode())
+            # Now obtaining the size of the file and sending it
+            file_size = os.path.getsize(song.getFile())
+            self.client.send(str(file_size).encode())
+            
+            # Now opening the file and sending it
+            file = open(str(song.getFile()),'rb')
+            data = file.read()
+            self.client.sendall(data)
+            self.client.send(b'<END>') # End case
+            print("MESSAGE : Successfully sent data")
+            QMessageBox.information(self,"Notification","Song : " + song.getTitle() + "sent successfully!",QMessageBox.Ok)
+            
+            # Closing the data streams
+            file.close()
+            self.client.close()
+            
+        except socket.timeout as s:
+            print("Connection Failed : TIMEOUT")
+        except Exception as e:
+            print("Connection Failed : ",e)
+        
+    # Function to initialize the send process over a thread 
+    def recvThread(self):
+        recv_thread = threading.Thread(target = self.recvSong)
+        recv_thread.start()
+    
+    # Function to receive song from the other app
+    def recvSong(self):
+        try:
+            # Setting up the server
+            self.server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            self.server.timeout(10)
+            print("Starting Receiver...")
+            # Binding the host and port and listening for connections
+            self.server.bind(("",9999))
+            self.server.listen(5)
+            # Accepting connections from the sender
+            client,addr = self.server.accept()
+            # Reading the data
+            # Getting the file name and size
+            file_name = client.recv(1024).decode()
+            file_size = client.recv(1024).decode()
+            # Setting up the file location
+            file_loc = str("temp/" + file_name)
+            # Opening the file to be written to disk
+            file = open(file_loc,'wb')
+            file_bytes = b'' # Byte array
+            
+            # Setting up the progress bar
+            progress = tqdm.tqdm(unit = "8",unit_scale = True,unit_divisor = 1000,
+                     total = int(file_size))
+            done = False # variable to let us know when to stop reading
+
+            # continously reading and appending the data
+            while not done:
+                data = client.recv(1024)
+                if file_bytes[-5:] == b'<END>': # we check for the tag in the string not in the stream
+                    done = True                 # bcz the stream is not always continous and the comparison
+                else:                           # would not always result successful
+                    file_bytes += data # Appending data to the string
+                progress.update(1024)
+    
+            # Now finally writing the data on the disk
+            file.write(file_bytes)
+
+            # Closing all the streams
+            file.close()
+            client.close()
+            self.server.close()
+            
+            # Adding this song to the list
+            self.addSong(file_loc)
+        
+        except socket.timeout:
+            print("Connection Failed : TIMEOUT")
+        except Exception as e:
+            print("Connection Failed : ",e)
+            
+            
+            
+    
+    '''
     # Function to override the close event
     def closeEvent(self,event):
+        self.client.close()
         self.server.close()
+    '''
         
     # Function to initialize various functionalities
     def setupFunctions(self):
@@ -104,6 +279,8 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
                 widget = VisibleSong(i)
                 # Connectint that widget to a method
                 widget.play_song_but.clicked.connect(lambda _,w=widget:self.playSongFromScroll(w.title))
+                # Adding additional signal for upload button
+                widget.upload_song_but.clicked.connect(lambda _,w=widget:self.sendThread(w.title))
                 self.songs_box.addWidget(widget)
                 separator = QFrame(self)
                 separator.setFrameShape(QFrame.HLine)  # Horizontal line separator
