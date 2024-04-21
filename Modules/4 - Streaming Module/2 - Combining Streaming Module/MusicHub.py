@@ -186,6 +186,9 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             self.server.listen(5)
             # Accepting connections from the sender
             client,addr = self.server.accept()
+            # Sending the acknowledgement
+            client.send("CONNECTED".encode())
+            QMessageBox.information(self,"Notification","Do you wish to receive the incoming song?",QMessageBox.Yes | QMessageBox.No)
             # Reading the data
             # Getting the file name and size
             file_name = client.recv(1024).decode()
@@ -220,6 +223,9 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             
             # Adding this song to the list
             self.addSong(file_loc)
+            
+            # Message to describe the end of the receiving process
+            QMessageBox.information(self,"Notification","Successful Song Transfer!",QMessageBox.Ok)
         
         except socket.timeout:
             print("Connection Failed : TIMEOUT")
@@ -249,6 +255,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         self.clear_song_but.clicked.connect(self.clearScrollArea) # Function to clear all the songs
         self.repeat_but.clicked.connect(self.repeat) # Repeat Functionality
         self.shuffle_but.clicked.connect(self.shuffle)
+        self.recv_song_but.clicked.connect(self.recvThread)
         # ****
         # Lets leave it for now faulty behaviour, either some other song starts playing etc
         #self.time_slider.sliderReleased.connect(self.changeSongPosition)

@@ -125,6 +125,14 @@ class MusicPlayerUI(QWidget):
         self.clear_song_but.resize(QSize(38,38))
         self.clear_song_but.setToolTip("Clear All")
         
+        self.recv_song_but = QPushButton(self.playing_queue_widget)
+        self.recv_song_but.setIcon(QIcon("Assets/downloads.png"))
+        self.recv_song_but.setIconSize(QSize(38,38))
+        self.recv_song_but.setSizePolicy(but_size_policy)
+        self.recv_song_but.setStyleSheet("background-color : transparent")
+        self.recv_song_but.resize(QSize(38,38))
+        self.recv_song_but.setToolTip("Clear All")
+        
         # Scrollable list item
         song_scroll_area = QScrollArea()
         song_area = QWidget()
@@ -143,6 +151,7 @@ class MusicPlayerUI(QWidget):
         song_area_hbox.addWidget(self.add_song_but)
         song_area_hbox.addWidget(self.add_folder_but)
         song_area_hbox.addWidget(self.clear_song_but)
+        song_area_hbox.addWidget(self.recv_song_but)
         song_area_hbox.addStretch()
         
         # Adding vbox to add them all
