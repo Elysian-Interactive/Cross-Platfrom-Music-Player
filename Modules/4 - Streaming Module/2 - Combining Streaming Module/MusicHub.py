@@ -7,7 +7,7 @@ from MusicPlayerUI import MusicPlayerUI,VisibleSong
 from List import List
 from PyQt5.QtWidgets import QApplication,QFileDialog,QMessageBox,QFrame
 from PyQt5.QtGui import QIcon,QPixmap
-from PyQt5.QtCore import QSize, QTimer
+from PyQt5.QtCore import QSize, QTimer, QThread
 from pathlib import Path
 import os
 import socket
@@ -124,15 +124,15 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
     '''
     # Function to initialize the send process over a thread
     def sendThread(self,key):
-        send_thread = threading.Thread(target = self.sendSong,args = (key,))
-        send_thread.start()
-    
+        self.send_thread = threading.Thread(target = self.sendSong,args = (key,))
+        self.send_thread.start()
+
     # Function to send song to the other app
     def sendSong(self,key):
         # First setup the client
         try:
             self.client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            self.client.settimeout(10) # 10 sec limit on obtaining the connection
+            self.client.settimeout(20) # 10 sec limit on obtaining the connection
             print("Starting Sender...")
             # Connecting the client to the server
             self.client.connect(("127.0.0.1",9999))
@@ -140,7 +140,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             data = self.client.recv(1024).decode()
             if data == "CONNECTED":
                 print("Successfully Connected to the application...")
-                QMessageBox.question(self,"Notification","Connection Successful!\nDo you wish to proceed?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
+                #QMessageBox.question(None,"Notification","Connection Successful!\nDo you wish to proceed?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
             
             # Sending the data now
             song = self.music_player.playing_queue.songs.search(key).value
@@ -158,7 +158,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             self.client.sendall(data)
             self.client.send(b'<END>') # End case
             print("MESSAGE : Successfully sent data")
-            QMessageBox.information(self,"Notification","Song : " + song.getTitle() + "sent successfully!",QMessageBox.Ok,QMessageBox.Ok)
+            #QMessageBox.information(None,"Notification","Song : " + song.getTitle() + "sent successfully!",QMessageBox.Ok,QMessageBox.Ok)
             
             # Closing the data streams
             file.close()
@@ -168,19 +168,24 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             print("Connection Failed : TIMEOUT")
         except Exception as e:
             print("Connection Failed : ",e)
-            QMessageBox.warning(self,"ERROR","Connection Timed Out!",QMessageBox.Ok,QMessageBox.Ok)
+            #QMessageBox.warning(None,"ERROR","Connection Timed Out!",QMessageBox.Ok,QMessageBox.Ok)
         
     # Function to initialize the send process over a thread 
     def recvThread(self):
-        recv_thread = threading.Thread(target = self.recvSong)
-        recv_thread.start()
+        '''
+        self.recv_thread = threading.Thread(target = self.recvSong)
+        self.recv_thread.start()
+        '''
+        self.thread = QThread()
+        self.thread.started.connect(self.recvSong)
+        self.thread.start()
     
     # Function to receive song from the other app
     def recvSong(self):
         try:
             # Setting up the server
             self.server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            self.server.settimeout(10)
+            self.server.settimeout(20)
             print("Starting Receiver...")
             # Binding the host and port and listening for connections
             self.server.bind(("",9999))
@@ -189,7 +194,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             client,addr = self.server.accept()
             # Sending the acknowledgement
             client.send("CONNECTED".encode())
-            QMessageBox.question(self,"Notification","Do you wish to receive the incoming song?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
+            #QMessageBox.question(None,"Notification","Do you wish to receive the incoming song?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
             # Reading the data
             # Getting the file name and size
             file_name = client.recv(1024).decode()
@@ -223,16 +228,16 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             self.server.close()
             
             # Adding this song to the list
-            self.addSong(file_loc)
+            self.addSong([file_loc])
             
             # Message to describe the end of the receiving process
-            QMessageBox.information(self,"Notification","Successful Song Transfer!",QMessageBox.Ok,QMessageBox.Ok)
+            #QMessageBox.information(None,"Notification","Successful Song Transfer!",QMessageBox.Ok,QMessageBox.Ok)
         
         except socket.timeout:
             print("Connection Failed : TIMEOUT")
         except Exception as e:
             print("Connection Failed : ",e)
-            answer = QMessageBox.information(self,"ERROR","Connection Timed Out!",QMessageBox.Ok,QMessageBox.Ok)
+            #answer = QMessageBox.information(None,"ERROR","Connection Timed Out!",QMessageBox.Ok,QMessageBox.Ok)
             
             
             
@@ -257,7 +262,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         self.clear_song_but.clicked.connect(self.clearScrollArea) # Function to clear all the songs
         self.repeat_but.clicked.connect(self.repeat) # Repeat Functionality
         self.shuffle_but.clicked.connect(self.shuffle)
-        self.recv_song_but.clicked.connect(self.recvThread)
+        self.recv_song_but.clicked.connect(self.recvSong)
         # ****
         # Lets leave it for now faulty behaviour, either some other song starts playing etc
         #self.time_slider.sliderReleased.connect(self.changeSongPosition)
@@ -289,7 +294,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
                 # Connectint that widget to a method
                 widget.play_song_but.clicked.connect(lambda _,w=widget:self.playSongFromScroll(w.title))
                 # Adding additional signal for upload button
-                widget.upload_song_but.clicked.connect(lambda _,w=widget:self.sendThread(w.title))
+                widget.upload_song_but.clicked.connect(lambda _,w=widget:self.sendSong(w.title))
                 self.songs_box.addWidget(widget)
                 separator = QFrame(self)
                 separator.setFrameShape(QFrame.HLine)  # Horizontal line separator
