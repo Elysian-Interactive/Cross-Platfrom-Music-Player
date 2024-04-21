@@ -140,7 +140,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             data = self.client.recv(1024).decode()
             if data == "CONNECTED":
                 print("Successfully Connected to the application...")
-                QMessageBox.information(self,"Notification","Connection Successful!\nDo you wish to proceed?",QMessageBox.Yes | QMessageBox.No)
+                QMessageBox.question(self,"Notification","Connection Successful!\nDo you wish to proceed?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
             
             # Sending the data now
             song = self.music_player.playing_queue.songs.search(key).value
@@ -158,7 +158,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             self.client.sendall(data)
             self.client.send(b'<END>') # End case
             print("MESSAGE : Successfully sent data")
-            QMessageBox.information(self,"Notification","Song : " + song.getTitle() + "sent successfully!",QMessageBox.Ok)
+            QMessageBox.information(self,"Notification","Song : " + song.getTitle() + "sent successfully!",QMessageBox.Ok,QMessageBox.Ok)
             
             # Closing the data streams
             file.close()
@@ -168,6 +168,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             print("Connection Failed : TIMEOUT")
         except Exception as e:
             print("Connection Failed : ",e)
+            QMessageBox.warning(self,"ERROR","Connection Timed Out!",QMessageBox.Ok,QMessageBox.Ok)
         
     # Function to initialize the send process over a thread 
     def recvThread(self):
@@ -179,7 +180,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
         try:
             # Setting up the server
             self.server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            self.server.timeout(10)
+            self.server.settimeout(10)
             print("Starting Receiver...")
             # Binding the host and port and listening for connections
             self.server.bind(("",9999))
@@ -188,7 +189,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             client,addr = self.server.accept()
             # Sending the acknowledgement
             client.send("CONNECTED".encode())
-            QMessageBox.information(self,"Notification","Do you wish to receive the incoming song?",QMessageBox.Yes | QMessageBox.No)
+            QMessageBox.question(self,"Notification","Do you wish to receive the incoming song?",QMessageBox.Yes | QMessageBox.No,QMessageBox.Yes)
             # Reading the data
             # Getting the file name and size
             file_name = client.recv(1024).decode()
@@ -225,12 +226,13 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             self.addSong(file_loc)
             
             # Message to describe the end of the receiving process
-            QMessageBox.information(self,"Notification","Successful Song Transfer!",QMessageBox.Ok)
+            QMessageBox.information(self,"Notification","Successful Song Transfer!",QMessageBox.Ok,QMessageBox.Ok)
         
         except socket.timeout:
             print("Connection Failed : TIMEOUT")
         except Exception as e:
             print("Connection Failed : ",e)
+            answer = QMessageBox.information(self,"ERROR","Connection Timed Out!",QMessageBox.Ok,QMessageBox.Ok)
             
             
             
