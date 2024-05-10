@@ -231,6 +231,7 @@ class MusicHub(MusicPlayerUI): # Inheriting the UI element
             self.addSong([file_loc])
             
             # Message to describe the end of the receiving process
+            print("MESSAGE : Song Received and added to the queue")
             #QMessageBox.information(None,"Notification","Successful Song Transfer!",QMessageBox.Ok,QMessageBox.Ok)
         
         except socket.timeout:
